@@ -7,4 +7,4 @@ https://github.com/feathers-studio/telegraf-docs/tree/master
 npx tsc      
 node index.js
 
-3. 
+3. Telegrame susirasti bota @Rule36_bot arva @Rule36 arba grupe "Bot Development" ir per ten galima su botu bendrauti.
