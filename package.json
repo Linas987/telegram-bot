@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "telegraf": "^4.12.2",
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.1"
+  }
+}
