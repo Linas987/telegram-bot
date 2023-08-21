@@ -5,9 +5,12 @@ import {Telegraf} from 'telegraf';
 import TelegrafSessionLocal from 'telegraf-session-local';
 
 import {fightDragons, danceWithFairies} from '../magic/index.js';
+import {spinner} from '../spinner/index.js';
 
 import {MyContext} from './my-context.js';
 import {menu} from './menu/index.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const token = process.env['BOT_TOKEN'];
 if (!token) {
@@ -50,6 +53,15 @@ bot.command('magic', async context => {
 	return context.reply(text);
 });
 
+bot.command('spinner', async context => {
+	const spinnerResults = spinner();
+
+	let text = '';
+	text += spinnerResults;
+
+	return context.reply(text);
+});
+
 const menuMiddleware = new MenuMiddleware('/', menu);
 bot.command('start', async context => menuMiddleware.replyToContext(context));
 bot.command('settings', async context => menuMiddleware.replyToContext(context, '/settings/'));
@@ -66,6 +78,7 @@ export async function start(): Promise<void> {
 		{command: 'magic', description: 'do magic'},
 		{command: 'help', description: 'show the help'},
 		{command: 'settings', description: 'open the settings'},
+		{command: 'spinner', description: 'open the spinner'},
 	]);
 
 	await bot.launch();
