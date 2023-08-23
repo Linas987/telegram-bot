@@ -4,15 +4,17 @@ import {MenuMiddleware} from 'telegraf-inline-menu';
 import {Telegraf} from 'telegraf';
 import TelegrafSessionLocal from 'telegraf-session-local';
 
-import {fightDragons, danceWithFairies} from '../magic/index.js';
-import {spinner} from '../spinner/index.js';
+import {Spinner} from '../spinner/index.js';
 
 import {MyContext} from './my-context.js';
 import {menu} from './menu/index.js';
 import dotenv from 'dotenv';
+
+import { beginRoomRecruit } from '../Utility/countdown.js';
 dotenv.config();
 
 const token = process.env['BOT_TOKEN'];
+const webLink = process.env['WEB_LINK']!;
 if (!token) {
 	throw new Error('You have to provide the bot-token from @BotFather via environment variable (BOT_TOKEN)');
 }
@@ -22,6 +24,18 @@ const bot = new Telegraf<MyContext>(token);
 const localSession = new TelegrafSessionLocal({
 	database: 'persist/sessions.json',
 });
+
+bot.start( async context => {
+	const roomKey = context.message.forward_from_chat?.id;
+	context.session.game = roomKey;
+	context.session.currentlyInGame=false;
+	context.reply("Welcome to the Spinner arcade", {
+		reply_markup: {
+		  keyboard: [[{ text: "web app", web_app: { url: webLink } }]],
+		},
+	  })
+})
+
 
 bot.use(localSession.middleware());
 
@@ -41,26 +55,26 @@ if (process.env['NODE_ENV'] !== 'production') {
 
 bot.command('help', async context => context.reply(context.i18n.t('help')));
 
-bot.command('magic', async context => {
-	const combatResult = fightDragons();
-	const fairyThoughts = danceWithFairies();
+bot.command('startgame', async context => {
+	beginRoomRecruit(context);
+	let params = context.update.message.text.split(" ").slice(1);
+	let spinner = new Spinner();
+	let spinnerResults=spinner.handleStartgameEvent(params);
 
-	let text = '';
-	text += combatResult;
-	text += '\n\n';
-	text += fairyThoughts;
+	return context.reply(spinnerResults+" /join now in 30 seconds");
+});
+
+bot.command('whoami', async context => {
+	let firstName = context.update.message.from.first_name;
+	let lastName = context.update.message.from.last_name;
+	let identifier = context.update.message.from.id;
+	let username = context.update.message.from.username;
+	let channelId = context.message.forward_from_chat?.id;
+	let text = "name: "+firstName+", surname: "+lastName+", id: "+identifier+", username: "+username+", channel Id: "+channelId;
 
 	return context.reply(text);
 });
 
-bot.command('spinner', async context => {
-	const spinnerResults = spinner();
-
-	let text = '';
-	text += spinnerResults;
-
-	return context.reply(text);
-});
 
 const menuMiddleware = new MenuMiddleware('/', menu);
 bot.command('start', async context => menuMiddleware.replyToContext(context));
@@ -74,13 +88,14 @@ bot.catch(error => {
 export async function start(): Promise<void> {
 	// The commands you set here will be shown as /commands like /start or /magic in your telegram client.
 	await bot.telegram.setMyCommands([
-		{command: 'start', description: 'open the menu'},
-		{command: 'magic', description: 'do magic'},
+		//{command: 'start', description: 'open the menu'},
 		{command: 'help', description: 'show the help'},
-		{command: 'settings', description: 'open the settings'},
-		{command: 'spinner', description: 'open the spinner'},
+		//{command: 'settings', description: 'open the settings'},
+		{command: 'startgame', description: 'start the spinner please give the amount and bet'},
+		{command: 'whoami', description: 'who Am I'},
 	]);
 
 	await bot.launch();
 	console.log(new Date(), 'Bot started as', bot.botInfo?.username);
 }
+
